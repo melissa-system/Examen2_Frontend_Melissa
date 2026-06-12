@@ -1,6 +1,8 @@
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
+import { Shield, AlertTriangle, CheckCircle } from "lucide-react";
 
 import Header from "@/components/landing/Header";
 import Footer from "@/components/landing/Footer";
@@ -22,6 +24,9 @@ const UnderConstruction = () => {
   const [reports, setReports] = useState<Fraud[]>([]);
   const [loading, setLoading] = useState(false);
 
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
   const loadReports = async () => {
     try {
       const response = await axios.get(API_URL);
@@ -38,6 +43,9 @@ const UnderConstruction = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    setSuccessMessage("");
+    setErrorMessage("");
+
     try {
       setLoading(true);
 
@@ -47,7 +55,9 @@ const UnderConstruction = () => {
         comments,
       });
 
-      alert("Fraud report submitted successfully.");
+      setSuccessMessage(
+        "El reporte fue enviado correctamente."
+      );
 
       setImpostorDetails("");
       setContactInfo("");
@@ -56,129 +66,202 @@ const UnderConstruction = () => {
       loadReports();
     } catch (error) {
       console.error(error);
-      alert("Error submitting report.");
+
+      setErrorMessage(
+        "No fue posible enviar el reporte. Intente nuevamente."
+      );
     } finally {
       setLoading(false);
     }
   };
 
+  const recentReports = [...reports]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() -
+        new Date(a.createdAt).getTime()
+    )
+    .slice(0, 5);
+
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-1 mt-24 px-6 py-10">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-4xl font-bold mb-4">
-            Fraud Reporting Platform
-          </h1>
+      <main className="flex-1 pt-36 pb-20 px-6 bg-gradient-hero">
+        <div className="max-w-6xl mx-auto">
+          {/* HERO */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full glass mb-6">
+              <Shield className="w-10 h-10 text-white" />
+            </div>
 
-          <p className="mb-8 text-gray-600">
-            Report suspected fraud attempts and review submitted reports.
-          </p>
+            <h1 className="text-5xl font-bold text-white mb-4">
+              Reporte de Fraudes
+            </h1>
 
-          <div className="bg-white rounded-xl shadow p-6 mb-10">
-            <h2 className="text-2xl font-semibold mb-4">
-              Submit Fraud Report
-            </h2>
+            <p className="text-lg text-gray-300 max-w-3xl mx-auto">
+              Plataforma pública para reportar intentos de fraude,
+              estafas y suplantación de identidad. La información
+              recopilada permite apoyar las labores de monitoreo,
+              análisis e investigación del Laboratorio de
+              Ciberseguridad e Informática Forense.
+            </p>
+          </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block mb-2 font-medium">
-                  Impostor Details
-                </label>
-                <input
-                  type="text"
-                  value={impostorDetails}
-                  onChange={(e) => setImpostorDetails(e.target.value)}
-                  required
-                  className="w-full border rounded-lg p-3"
-                />
-              </div>
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* FORMULARIO */}
+            <div className="card glass p-8 hover-lift">
+              <h2 className="text-2xl font-bold mb-6">
+                Registrar Reporte
+              </h2>
 
-              <div>
-                <label className="block mb-2 font-medium">
-                  Contact Info
-                </label>
-                <input
-                  type="text"
-                  value={contactInfo}
-                  onChange={(e) => setContactInfo(e.target.value)}
-                  required
-                  className="w-full border rounded-lg p-3"
-                />
-              </div>
+              {successMessage && (
+                <div className="mb-6 flex items-center gap-3 rounded-xl border border-green-200 bg-green-50 p-4 text-green-700">
+                  <CheckCircle className="w-5 h-5" />
+                  {successMessage}
+                </div>
+              )}
 
-              <div>
-                <label className="block mb-2 font-medium">
-                  Comments
-                </label>
-                <textarea
-                  value={comments}
-                  onChange={(e) => setComments(e.target.value)}
-                  rows={4}
-                  className="w-full border rounded-lg p-3"
-                />
-              </div>
+              {errorMessage && (
+                <div className="mb-6 flex items-center gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+                  <AlertTriangle className="w-5 h-5" />
+                  {errorMessage}
+                </div>
+              )}
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-3 rounded-lg bg-black text-white"
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-5"
               >
-                {loading ? "Submitting..." : "Submit Report"}
-              </button>
-            </form>
-          </div>
+                <div>
+                  <label className="block mb-2 text-sm font-semibold">
+                    Impostor Details
+                  </label>
 
-          <div className="bg-white rounded-xl shadow p-6">
-            <h2 className="text-2xl font-semibold mb-4">
-              Submitted Reports
-            </h2>
+                  <input
+                    type="text"
+                    value={impostorDetails}
+                    onChange={(e) =>
+                      setImpostorDetails(e.target.value)
+                    }
+                    required
+                    placeholder="Ingrese información sobre el presunto impostor"
+                    className="input"
+                  />
+                </div>
 
-            {reports.length === 0 ? (
-              <p>No reports found.</p>
-            ) : (
-              <div className="space-y-4">
-                {reports.map((report) => (
-                  <div
-                    key={report.id}
-                    className="border rounded-lg p-4"
-                  >
-                    <p>
-                      <strong>ID:</strong> {report.id}
-                    </p>
+                <div>
+                  <label className="block mb-2 text-sm font-semibold">
+                    Contact Info
+                  </label>
 
-                    <p>
-                      <strong>Impostor:</strong>{" "}
-                      {report.impostorDetails}
-                    </p>
+                  <input
+                    type="text"
+                    value={contactInfo}
+                    onChange={(e) =>
+                      setContactInfo(e.target.value)
+                    }
+                    required
+                    placeholder="Correo, teléfono u otro dato de contacto"
+                    className="input"
+                  />
+                </div>
 
-                    <p>
-                      <strong>Contact:</strong>{" "}
-                      {report.contactInfo}
-                    </p>
+                <div>
+                  <label className="block mb-2 text-sm font-semibold">
+                    Comments
+                  </label>
 
-                    <p>
-                      <strong>Comments:</strong>{" "}
-                      {report.comments}
-                    </p>
+                  <textarea
+                    value={comments}
+                    onChange={(e) =>
+                      setComments(e.target.value)
+                    }
+                    rows={5}
+                    placeholder="Describa los hechos observados"
+                    className="w-full rounded-lg border border-gray-200 bg-white/50 px-3 py-3 text-sm backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-gray-300"
+                  />
+                </div>
 
-                    <p>
-                      <strong>Date:</strong>{" "}
-                      {new Date(report.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full btn btn-primary btn-lg"
+                >
+                  {loading
+                    ? "Enviando reporte..."
+                    : "Enviar Reporte"}
+                </button>
+              </form>
+            </div>
+
+            {/* REPORTES */}
+            <div className="card glass p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold">
+                  Reportes Registrados
+                </h2>
+
+                <span className="badge badge-secondary">
+                  Últimos 5
+                </span>
               </div>
-            )}
+
+              {recentReports.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  No existen reportes registrados.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentReports.map((report) => (
+                    <div
+                      key={report.id}
+                      className="card p-5 hover-lift"
+                    >
+                      <div className="flex justify-between items-center mb-3">
+                        <span className="badge badge-secondary">
+                          ID #{report.id}
+                        </span>
+
+                        <span className="text-xs text-gray-500">
+                          {new Date(
+                            report.createdAt
+                          ).toLocaleString("es-CR", {
+                            dateStyle: "medium",
+                            timeStyle: "short",
+                          })}
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 text-sm">
+                        <p>
+                          <strong>Impostor:</strong>{" "}
+                          {report.impostorDetails}
+                        </p>
+
+                        <p>
+                          <strong>Contacto:</strong>{" "}
+                          {report.contactInfo}
+                        </p>
+
+                        <p>
+                          <strong>Comentarios:</strong>{" "}
+                          {report.comments}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="mt-8">
+          <div className="mt-10 text-center">
             <Link
               to="/"
-              className="text-blue-600 underline"
+              className="inline-flex items-center gap-2 text-white hover:text-gray-300 transition-colors"
             >
-              Back to Home
+              ← Volver al inicio
             </Link>
           </div>
         </div>
